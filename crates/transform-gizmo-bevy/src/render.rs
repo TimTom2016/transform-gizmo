@@ -295,6 +295,7 @@ impl SpecializedRenderPipeline for TransformGizmoPipeline {
             layout: vec![
                 view_layout.main_layout,
                 view_layout.binding_array_layout,
+                view_layout.empty_layout,
                 self.mesh_pipeline.mesh_layouts.model_only.clone(),
             ],
             primitive: PrimitiveState {
