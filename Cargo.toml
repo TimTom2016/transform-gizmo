@@ -43,6 +43,9 @@ bevy_pbr = { version = "0.17.3", default-features = false }
 bevy_ecs = { version = "0.17.3", default-features = false }
 bevy_log = { version = "0.17.3", default-features = false }
 bevy_window = { version = "0.17.3", default-features = false }
+bevy_shader = { version = "0.17.3", default-features = false }
+bevy_camera = { version = "0.17.3", default-features = false }
+bevy_mesh = { version = "0.17.3", default-features = false }
 bevy_transform = { version = "0.17.3", default-features = false }
 bevy_derive = { version = "0.17.3", default-features = false }
 bevy_image = { version = "0.17.3", default-features = false }

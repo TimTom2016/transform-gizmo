@@ -30,6 +30,7 @@
 
 use bevy_app::prelude::*;
 use bevy_asset::{AssetApp, Assets};
+use bevy_camera::Camera;
 use bevy_ecs::prelude::*;
 use bevy_input::prelude::*;
 use bevy_math::{DQuat, DVec3, Vec2};
@@ -371,9 +372,9 @@ fn handle_hotkeys(
     }
 }
 
-#[derive(Debug, Event, Default)]
+#[derive(Debug, Message, Default)]
 pub struct GizmoDragStarted;
-#[derive(Debug, Event, Default)]
+#[derive(Debug, Message, Default)]
 pub struct GizmoDragging;
 
 #[allow(clippy::too_many_arguments)]
@@ -442,7 +443,7 @@ fn update_gizmos(
 
     let projection_matrix = camera.clip_from_view();
 
-    let view_matrix = camera_transform.compute_matrix().inverse();
+    let view_matrix = camera_transform.to_matrix().inverse();
 
     let mut snap_angle = gizmo_options.snap_angle;
     let mut snap_distance = gizmo_options.snap_distance;
