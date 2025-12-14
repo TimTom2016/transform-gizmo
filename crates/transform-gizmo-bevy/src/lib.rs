@@ -36,7 +36,6 @@ use bevy_input::prelude::*;
 use bevy_math::{DQuat, DVec3, Vec2};
 use bevy_picking::hover::HoverMap;
 use bevy_platform::collections::HashMap;
-use bevy_render::prelude::*;
 use bevy_transform::prelude::*;
 use bevy_window::{PrimaryWindow, Window};
 use mouse_interact::MouseGizmoInteractionPlugin;
@@ -73,8 +72,8 @@ impl Plugin for TransformGizmoPlugin {
         app.init_asset::<render::GizmoDrawData>()
             .init_resource::<GizmoOptions>()
             .init_resource::<GizmoStorage>()
-            .add_event::<GizmoDragStarted>()
-            .add_event::<GizmoDragging>()
+            .add_message::<GizmoDragStarted>()
+            .add_message::<GizmoDragging>()
             .add_plugins(TransformGizmoRenderPlugin)
             .add_systems(
                 Last,
@@ -382,8 +381,8 @@ fn update_gizmos(
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_gizmo_camera: Query<(&Camera, &GlobalTransform), With<GizmoCamera>>,
     mut q_targets: Query<(Entity, &mut Transform, &mut GizmoTarget), Without<GizmoCamera>>,
-    mut drag_started: EventReader<GizmoDragStarted>,
-    mut dragging: EventReader<GizmoDragging>,
+    mut drag_started: MessageReader<GizmoDragStarted>,
+    mut dragging: MessageReader<GizmoDragging>,
     gizmo_options: Res<GizmoOptions>,
     mut gizmo_storage: ResMut<GizmoStorage>,
     mut last_cursor_pos: Local<Vec2>,

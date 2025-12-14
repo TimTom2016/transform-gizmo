@@ -1,5 +1,5 @@
 use bevy_app::{App, Plugin};
-use bevy_asset::{Asset, AssetId, Handle, RenderAssetUsages, load_internal_asset, weak_handle};
+use bevy_asset::{Asset, AssetId, Handle, RenderAssetUsages, load_internal_asset, uuid_handle};
 use bevy_camera::visibility::RenderLayers;
 use bevy_core_pipeline::core_3d::{CORE_3D_DEPTH_FORMAT, Transparent3d};
 use bevy_core_pipeline::prepass::{
@@ -16,7 +16,6 @@ use bevy_pbr::{MeshPipeline, MeshPipelineKey, SetMeshViewBindGroup};
 use bevy_platform::collections::{HashMap, HashSet};
 use bevy_reflect::{Reflect, TypePath};
 use bevy_render::extract_component::ExtractComponent;
-use bevy_render::prelude::*;
 use bevy_render::render_asset::{
     PrepareAssetError, RenderAsset, RenderAssetPlugin, RenderAssets, prepare_assets,
 };
@@ -34,14 +33,15 @@ use bevy_render::render_resource::{
 use bevy_render::renderer::RenderDevice;
 use bevy_render::sync_world::TemporaryRenderEntity;
 use bevy_render::view::{ExtractedView, ViewTarget};
-use bevy_render::{Extract, Render, RenderApp, RenderSet};
+use bevy_render::{Extract, Render, RenderApp};
+use bevy_render::{RenderSystems, prelude::*};
 use bevy_shader::Shader;
 use bytemuck::cast_slice;
 use uuid::Uuid;
 
 use crate::GizmoCamera;
 
-const GIZMO_SHADER_HANDLE: Handle<Shader> = weak_handle!("e44be110-cb2b-4a8d-9c0c-965424e6a633");
+const GIZMO_SHADER_HANDLE: Handle<Shader> = uuid_handle!("e44be110-cb2b-4a8d-9c0c-965424e6a633");
 
 pub(crate) struct TransformGizmoRenderPlugin;
 
@@ -63,7 +63,7 @@ impl Plugin for TransformGizmoRenderPlugin {
             .add_systems(
                 Render,
                 queue_transform_gizmos
-                    .in_set(RenderSet::Queue)
+                    .in_set(RenderSystems::Queue)
                     .after(prepare_assets::<GizmoBuffers>),
             );
     }
@@ -86,7 +86,17 @@ pub(crate) struct DrawDataHandles {
 }
 
 #[derive(
-    Component, Default, Clone, Debug, Deref, DerefMut, Reflect, PartialEq, Eq, ExtractComponent,
+    Component,
+    Default,
+    Clone,
+    Debug,
+    Deref,
+    DerefMut,
+    Reflect,
+    PartialEq,
+    Eq,
+    ExtractComponent,
+    Hash,
 )]
 #[reflect(Component)]
 pub(crate) struct GizmoDrawDataHandle(pub(crate) Handle<GizmoDrawData>);
@@ -109,14 +119,14 @@ impl From<&GizmoDrawDataHandle> for AssetId<GizmoDrawData> {
 }
 
 fn extract_gizmo_data(mut commands: Commands, handles: Extract<Res<DrawDataHandles>>) {
-    let handle_ids = handles
+    let handle_refs = handles
         .handles
         .values()
-        .map(|handle| (handle.id(), handle.0.clone()))
-        .collect::<HashMap<_, _>>();
+        .map(|handle| handle.clone())
+        .collect::<HashSet<_>>();
 
-    for (_, handle) in handle_ids {
-        commands.spawn((GizmoDrawDataHandle(handle), TemporaryRenderEntity));
+    for handle in handle_refs {
+        commands.spawn((handle, TemporaryRenderEntity));
     }
 }
 
@@ -141,9 +151,9 @@ impl RenderAsset for GizmoBuffers {
 
     fn prepare_asset(
         source_asset: Self::SourceAsset,
-        asset_id: AssetId<Self::SourceAsset>,
+        _: AssetId<Self::SourceAsset>,
         render_device: &mut SystemParamItem<'_, '_, Self::Param>,
-        previous_asset: Option<&Self>,
+        _: Option<&Self>,
     ) -> std::result::Result<Self, PrepareAssetError<Self::SourceAsset>> {
         let position_buffer_data = cast_slice(&source_asset.0.vertices);
         let position_buffer = render_device.create_buffer_with_data(&BufferInitDescriptor {
@@ -292,12 +302,7 @@ impl SpecializedRenderPipeline for TransformGizmoPipeline {
                     write_mask: ColorWrites::ALL,
                 })],
             }),
-            layout: vec![
-                view_layout.main_layout,
-                view_layout.binding_array_layout,
-                view_layout.empty_layout,
-                self.mesh_pipeline.mesh_layouts.model_only.clone(),
-            ],
+            layout: vec![view_layout.main_layout],
             primitive: PrimitiveState {
                 topology: PrimitiveTopology::TriangleList,
                 cull_mode: None,
