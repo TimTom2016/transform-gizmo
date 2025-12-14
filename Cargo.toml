@@ -11,7 +11,7 @@ homepage = "https://github.com/urholaukkarinen/transform-gizmo"
 repository = "https://github.com/urholaukkarinen/transform-gizmo"
 authors = ["Urho Laukkarinen <urho.laukkarinen@gmail.com>"]
 
-encies]
+[workspace.dependencies]
 transform-gizmo = { version = "0.8.0", path = "crates/transform-gizmo" }
 transform-gizmo-egui = { version = "0.8.0", path = "crates/transform-gizmo-egui" }
 transform-gizmo-bevy = { version = "0.8.0", path = "crates/transform-gizmo-bevy" }
